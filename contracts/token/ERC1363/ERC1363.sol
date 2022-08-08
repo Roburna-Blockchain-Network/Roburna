@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "../ERC20.sol";
-import "node_modules/@openzeppelin/contracts/utils/Address.sol";
-import "node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./IERC1363.sol";
 import "./IERC1363Receiver.sol";
 import "./IERC1363Spender.sol";

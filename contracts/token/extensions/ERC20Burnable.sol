@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "node_modules/@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "../ERC20.sol";
 import "../interfaces/IERC20Burnable.sol";
 

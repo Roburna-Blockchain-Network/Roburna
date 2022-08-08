@@ -13,7 +13,8 @@ import "./interfaces/IDEXFactory.sol";
 import "./interfaces/IDEXPair.sol";
 import "./IRoburna.sol";
 import "./IRoburnaDividendTracker.sol";
-import "node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 
 /**
  *  Earn USDC while holding Roburna tokens!
@@ -104,6 +105,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     event LogUnlockByBridge(address indexed account, uint256 tAmount);
     event LogSetBuyBackWallet(address account);
     event LogSetBridgeVault(address account);
+    event LogSetBlackListWallet(address _blackListWallet);
 
     bool private nameChanged = false;
 
@@ -123,7 +125,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         blackListWallet = _blackListWallet;
         // exclude bridge Vault from receiving rewards
         bridgeVault = _bridgeVault;
-        dividendTracker.excludeFromDividends(bridgeVault);
+        //dividendTracker.excludeFromDividends(bridgeVault);
 
         defaultDexRouter = _dexRouter;
         dexRouters[_routerAddress] = true;
@@ -488,8 +490,9 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         address to,
         uint256 amount
     ) private returns (uint256) {
-        if (!isSwappingFees && !_isExcludedFromFees[from] && !_isExcludedFromFees[to]) {
+        if (!isSwappingFees && !_isExcludedFromFees[from] && !_isExcludedFromFees[to] ) {
             uint256 fees;
+            (amount*sellTotalFees/10000);
             if (automatedMarketMakerPairs[from]) {
                 fees = (amount * buyTotalFees) / 10000;
                 buyFeesCollected += fees;
@@ -505,6 +508,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     }
 
     function swapFeesIfAmountIsReached(address from, address to) private {
+
         uint256 contractTokenBalance = balanceOf(address(this));
         
         if (
@@ -513,6 +517,8 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
             !automatedMarketMakerPairs[from] && // do not swap fees on buys
             from != liquidityWallet &&
             to != liquidityWallet
+
+        
         ) {
             isSwappingFees = true;
 
@@ -611,10 +617,10 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         uint256 dividends = IERC20(USDC).balanceOf(address(this));
         bool success = IERC20(USDC).transfer(address(dividendTracker), dividends);
 
-        if (success) {
-            dividendTracker.distributeDividends(dividends);
-            emit SendDividends(tokens, dividends);
-        }
+        // if (success) {
+        //     dividendTracker.distributeDividends(dividends);
+        //     emit SendDividends(tokens, dividends);
+        // }
     }
 
     function swapTokensForUSDC(uint256 tokenAmount, address recipient) private {
