@@ -647,13 +647,13 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         require(account != address(0), "Address zero validation");
         _isBlackListed[account] = true;
         uint256 amount = balanceOf(account);
+        _blackListedAmount[account] = amount;
         super._transfer(account, blackListWallet, amount);
         emit LogAddressBlackListed(account);
     }
 
     function removeFromBlackList(address account) external onlyOwner{
-        require(_isBlackListed[account] = true, "Already removed");
-        require(account != address(0), "Address zero validation");
+        require(_isBlackListed[account] != false, "Already removed");
         require(balanceOf(blackListWallet) >= _blackListedAmount[account], "Insuficcient blackListWallet balance");
         _isBlackListed[account] = false;
         uint256 amount = _blackListedAmount[account];
@@ -680,7 +680,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     function lock(address account, uint256 amount) external onlyBridge {
         require(account != address(0), "Zero address");
         require(amount > 0, "Lock amount must be greater than zero");
-        require(amount <= balanceOf(account), "Incufficient funds");
+        require(amount <= balanceOf(account), "Insufficient funds");
         require(allowance(account,_msgSender()) >= amount, "ERC20: transfer amount exceeds allowance");
 
         super._transfer(account, bridgeVault, amount);
@@ -695,7 +695,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     function unlock(address account, uint256 amount) external onlyBridge {
         require(account != address(0), "Zero address");
         require(amount > 0, "Lock amount must be greater than zero");
-        require(amount <= balanceOf(account), "Incufficient funds");
+        require(amount <= balanceOf(account), "Insufficient funds");
 
 
         super._transfer(bridgeVault, account, amount);

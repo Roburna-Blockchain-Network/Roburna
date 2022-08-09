@@ -2,14 +2,15 @@
   const { expect } = require("chai");
   const { ethers } = require("hardhat");
   const { utils, BigNumber } = require("ethers");
+  const {setTimeout } =require("timers/promises")
 
 
   describe("Roburna Testing", function () {
 
-     beforeEach(async function () {
+     before(async function () {
 
       //get signers
-      [owner, marketingWallet, buyBackWallet, blackListWallet, bridgeVault, user1,user2,user3,user4,user5,user6] = await ethers.getSigners();
+        [owner, marketingWallet, buyBackWallet, blackListWallet, bridgeVault, bridge, user1,user2,user3,user4,user5,user6] = await ethers.getSigners();
       
       //get contract factory
       this.BEP20 = await ethers.getContractFactory("Dividend")
@@ -65,6 +66,7 @@
 
       //Top ETH 
       await network.provider.send("hardhat_setBalance", [ owner.address, '0x1431E0FAE6D7217CAA0000000'])
+      await network.provider.send("hardhat_setBalance", [ bridge.address, '0x1431E0FAE6D7217CAA0000000'])
      
       this.liquidityERC20 = ethers.utils.parseEther('10000000')
       this.liquidityETH  = ethers.utils.parseEther('10000')
@@ -96,6 +98,8 @@
         sellFee = await this.RBA.sellTotalFees()/10000
         buyFees = await this.RBA.buyTotalFees()/10000
         swapAmountAt = await this.RBA.swapTokensAtAmount()
+
+        addressZero = '0x0000000000000000000000000000000000000000'
 
      });
 
@@ -266,7 +270,7 @@
 
      });
 
-    describe.only('Swap, Liquidify, send fee', function() {
+    describe('Swap, Liquidify, send fee', function() {
 
 
       it('should send fee ', async function () {
@@ -371,7 +375,7 @@
 
       //get wallent balances before swap and liquidify
       const marketingWalletBal = await this.provider.getBalance(marketingWallet.address)/10**18
-      const buyBackWalletBal =  await this.provider.getBalance(buyBackWallet.address)/10**18
+      const buyBackWalletBal =  await this.RBA.balanceOf(buyBackWallet.address)/10**18
       const blackListWalletBal = await this.provider.getBalance(blackListWallet.address)/10**18
       const bridgeVaultBal =  await this.provider.getBalance(bridgeVault.address)/10**18
       
@@ -403,7 +407,7 @@
       
       //get wallet bal after swap
     const _marketingWalletBal = await this.provider.getBalance(marketingWallet.address)/10**18
-    const _buyBackWalletBal =  await this.provider.getBalance(buyBackWallet.address)/10**18
+    const _buyBackWalletBal =  await this.RBA.balanceOf(buyBackWallet.address)/10**18
     const _blackListWalletBal = await this.provider.getBalance(blackListWallet.address)/10**18
     const _bridgeVaultBal =  await this.provider.getBalance(bridgeVault.address)/10**18
       
@@ -411,18 +415,22 @@
         
       // Eth collected
       const sellMarketingFee = await this.RBA.sellMarketingFee()/10000
-      const mFee =  (swapAmountAt/10**18)*sellMarketingFee
-      console.log(`Marketing Amount collected: ${mFee}`)
+      const mFee =  (swapAmountAt/10**18*sellMarketingFee)/sellFee
+      console.log('\x1b[33m%s\x1b[0m',`Marketing Amount collected: ${mFee}`)
       console.log('           marketing ETH Estimate:',await amm(mFee))
       console.log('           marketing ETH Actual:',_marketingWalletBal - marketingWalletBal)
       console.log('           ')
 
-      
-    //   console.log('           Safety Vault ETH Estimate:',await amm(834))
-    //   console.log('           Safety ETH Actual',SafetyVaultBalBBalAfter - SafetyVaultBalBefore)
-    //   console.log('           ')
+      const sellBuyBackFee = await this.RBA.sellBuyBackFee()/10000
+      const bFee =  (swapAmountAt/10**18*sellBuyBackFee)/sellFee
+
+      console.log('\x1b[33m%s\x1b[0m',`Buy Back Amount`)
+      console.log(`\t\tBuy Back RBA Estimate: ${bFee}`)
+      console.log('\t\tBuy Back RBA Actual:',_buyBackWalletBal - buyBackWalletBal)
+      console.log('           ')
+
      
-    console.log(`          Total dividend collected:${await this.USDC.balanceOf(this.RBAT.address)/10**18}`)
+      console.log(`Total dividend collected:${await this.USDC.balanceOf(this.RBAT.address)/10**18}`)
 
     //   const baluser1 =await this.RBA.dividendTokenBalanceOf(user1.address)/10**18
     //   const baluser2 =await this.RBA.dividendTokenBalanceOf(user2.address)/10**18
@@ -446,6 +454,144 @@
     })
 
      }); 
+
+    describe('blackListWallet', function(){
+
+      it('BlackListAccount', async function(){
+        
+      await this.RBA.transfer(user4.address, ethers.utils.parseEther('10000'))
+      expect(await this.RBA.balanceOf(user4.address)).to.be.equal(ethers.utils.parseEther('10000'))
+
+      //Blacklist user user4
+      await expect(this.RBA.blackListAccount(user4.address)).to.emit(
+        this.RBA, 'LogAddressBlackListed').withArgs(user4.address)
+     
+        expect(await this.RBA.balanceOf(user4.address)).to.be.equal(0)
+        expect(await this.RBA.balanceOf(blackListWallet.address)).to.be.equal(
+          ethers.utils.parseEther('10000'))
+      
+      //revert 1: "Already blacklisted"
+      await expect(this.RBA.blackListAccount(user4.address)).to.be.revertedWith(
+        "Already blacklisted")
+
+       //revert 2: "Address zero validation"
+       await expect(this.RBA.blackListAccount(addressZero)).to.be.revertedWith(
+        "Address zero validation" )
+
+
+      //revert 3
+      await expect(this.RBA.transfer(user4.address, ethers.utils.parseEther('10000'))).to.be.revertedWith(
+        "Address blacklisted"
+      )
+     
+      })
+
+      it('removeFromBlackList', async function(){
+
+          //Revert 1: "Insuficcient blackListWallet balance"
+          await this.RBA.connect(blackListWallet).transfer(owner.address, ethers.utils.parseEther('100'))
+          await expect(this.RBA.removeFromBlackList(user4.address)).to.be.revertedWith(
+            "Insuficcient blackListWallet balance")
+          await  this.RBA.transfer(blackListWallet.address, ethers.utils.parseEther('100') )
+
+         //console.log(`\t\tIs blacklisted? ${await this.RBA._isBlackListed(user4.address)} `)
+
+         await expect(this.RBA.removeFromBlackList(user4.address)).to.emit(
+          this.RBA, 'LogAddressRemovedFromBL').withArgs(user4.address)
+       
+         //console.log(`\t\tIs blacklisted? ${await this.RBA._isBlackListed(user4.address)} `)
+
+         expect(await this.RBA.balanceOf(blackListWallet.address)).to.be.equal(0)
+          
+         expect(await this.RBA.balanceOf(user4.address)).to.be.equal(ethers.utils.parseEther('10000'))
+
+          //Revert 1: "Already removed"
+          await expect(this.RBA.removeFromBlackList(user4.address)).to.be.revertedWith("Already removed")
+
+          
+      })
+
+
+
+      
+    })
+
+    describe.only("Bridge", function(){
+      it('setBridge', async function(){
+        await expect(this.RBA.setBridge(bridge.address)).to.emit(
+          this.RBA, "LogSetBridge").withArgs(owner.address, bridge.address)
+
+        //Reverts
+        await expect(this.RBA.setBridge(bridge.address)).to.be.revertedWith("Same Bridge!")
+        await expect(this.RBA.setBridge(addressZero)).to.be.revertedWith("Zero Address")
+
+    
+      })
+
+      it('lock', async function(){
+        //Revert 1:"Zero address"
+        await expect(this.RBA.connect(bridge).lock(
+          addressZero, ethers.utils.parseEther('1000'))).revertedWith("Zero address")
+
+        //Revert 2: "Lock amount must be greater than zero"
+        await expect(this.RBA.connect(bridge).lock(
+            user5.address, ethers.utils.parseEther('000'))).revertedWith(
+              "Lock amount must be greater than zero")
+
+        //Revert 3:  "Insufficient funds"
+        await expect(this.RBA.connect(bridge).lock(
+          user5.address, ethers.utils.parseEther('1000'))).revertedWith(
+            "Insufficient funds")
+
+       await this.RBA.transfer(user5.address, ethers.utils.parseEther('1000'))
+
+       await expect(this.RBA.connect(bridge).lock(
+        user5.address, ethers.utils.parseEther('1000'))).revertedWith(
+          "ERC20: transfer amount exceeds allowance")
+
+      await this.RBA.connect(user5).approve(
+        bridge.address, ethers.utils.parseEther('1000'))
+
+      await expect(this.RBA.connect(bridge).lock(
+          user5.address, ethers.utils.parseEther('1000'))).to.emit(
+            this.RBA, 'LogLockByBridge').withArgs(user5.address,ethers.utils.parseEther('1000') )
+
+      expect(await this.RBA.balanceOf(bridgeVault.address)).to.be.equal(
+        ethers.utils.parseEther('1000'))
+      
+
+
+      })
+
+      it('unlock', async function(){
+        //Revert 1:"Zero address"
+        await expect(this.RBA.connect(bridge).unlock(
+          addressZero, ethers.utils.parseEther('1000'))).revertedWith("Zero address")
+
+        //Revert 2: "Lock amount must be greater than zero"
+        await expect(this.RBA.connect(bridge).unlock(
+            user5.address, ethers.utils.parseEther('000'))).revertedWith(
+              "Lock amount must be greater than zero")
+
+        //Revert 3:  "Insufficient funds"
+        await expect(this.RBA.connect(bridge).unlock(
+          user5.address, ethers.utils.parseEther('1000'))).revertedWith(
+            "Insufficient funds")
+
+        
+      expect(await this.RBA.balanceOf(bridgeVault.address)).to.be.equal(
+        ethers.utils.parseEther('1000'))
+      
+
+        
+        // await expect(this.RBA.connect(bridge).unlock(
+        //   user5.address, ethers.utils.parseEther('500'))).to.emit(
+        //     this.RBA, 'LogUnlockByBridge').withArgs(user5.address,ethers.utils.parseEther('500') )
+
+      })
+      
+
+    })
 
     describe('Update',function(){
         
