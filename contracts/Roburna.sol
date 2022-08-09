@@ -97,6 +97,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     mapping(address => bool) private _isExcludedFromFees;
     mapping(address => bool) private _isBlackListed;
     mapping(address => uint256) private _blackListedAmount;
+    mapping(address => uint256) private _lockedAmount;
 
     event LogAddressBlackListed(address account);
     event LogAddressRemovedFromBL(address account);
@@ -125,7 +126,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         blackListWallet = _blackListWallet;
         // exclude bridge Vault from receiving rewards
         bridgeVault = _bridgeVault;
-        //dividendTracker.excludeFromDividends(bridgeVault);
+       
 
         defaultDexRouter = _dexRouter;
         dexRouters[_routerAddress] = true;
@@ -172,6 +173,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         dividendTracker.excludeFromDividends(address(defaultPair));
         dividendTracker.excludeFromDividends(address(dividendTracker));
         dividendTracker.excludeFromDividends(address(defaultDexRouter));
+        dividendTracker.excludeFromDividends(bridgeVault);
 
         // whitlist wallets f.e. owner wallet to send tokens before presales are over
         setWhitelistAddress(address(this), true);
@@ -616,11 +618,13 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         swapTokensForUSDC(tokens, address(this));
         uint256 dividends = IERC20(USDC).balanceOf(address(this));
         bool success = IERC20(USDC).transfer(address(dividendTracker), dividends);
+        
 
-        // if (success) {
-        //     dividendTracker.distributeDividends(dividends);
-        //     emit SendDividends(tokens, dividends);
-        // }
+        if (success){
+            //dividendTracker.distributeDividends(dividends);
+            // emit SendDividends(tokens, dividends);
+        }
+           
     }
 
     function swapTokensForUSDC(uint256 tokenAmount, address recipient) private {
@@ -682,8 +686,9 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         require(amount > 0, "Lock amount must be greater than zero");
         require(amount <= balanceOf(account), "Insufficient funds");
         require(allowance(account,_msgSender()) >= amount, "ERC20: transfer amount exceeds allowance");
-
+        _lockedAmount[account] = amount;
         super._transfer(account, bridgeVault, amount);
+
 
 
         emit LogLockByBridge(account, amount);
@@ -694,8 +699,9 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
      */
     function unlock(address account, uint256 amount) external onlyBridge {
         require(account != address(0), "Zero address");
-        require(amount > 0, "Lock amount must be greater than zero");
-        require(amount <= balanceOf(account), "Insufficient funds");
+        require(amount > 0, "Unlock amount must be greater than zero");
+        //require(amount <= balanceOf(account), "Insufficient funds");
+        require(amount <= _lockedAmount[account], "Insufficient funds");
 
 
         super._transfer(bridgeVault, account, amount);

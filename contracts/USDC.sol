@@ -356,7 +356,7 @@ contract Dividend is Context, IBEP20, Ownable {
     _name = name;
     _symbol = symbol;
     _decimals = 18;
-    _totalSupply = 31000000000000000000000000;
+    _totalSupply = 10*(10**9)*(10**18);
     _balances[msg.sender] = _totalSupply;
 
     emit Transfer(address(0), msg.sender, _totalSupply);

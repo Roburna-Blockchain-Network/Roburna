@@ -68,8 +68,8 @@
       await network.provider.send("hardhat_setBalance", [ owner.address, '0x1431E0FAE6D7217CAA0000000'])
       await network.provider.send("hardhat_setBalance", [ bridge.address, '0x1431E0FAE6D7217CAA0000000'])
      
-      this.liquidityERC20 = ethers.utils.parseEther('10000000')
-      this.liquidityETH  = ethers.utils.parseEther('10000')
+      this.liquidityERC20 = ethers.utils.parseEther('100000000')
+      this.liquidityETH  = ethers.utils.parseEther('100000')
 
       //add liquidty WETH-this.RBAT
       await this.RBA.approve(process.env.ROUTER02, this.liquidityERC20);
@@ -270,7 +270,7 @@
 
      });
 
-    describe('Swap, Liquidify, send fee', function() {
+    describe.only('Swap, Liquidify, send fee', function() {
 
 
       it('should send fee ', async function () {
@@ -315,12 +315,20 @@
         console.log('           ETH Reserve:',ETH/10**18)
         console.log('           ')
 
+      //send holding amount to 1,2,3,4,5
+      await this.RBA.transfer(user1.address, ethers.utils.parseEther('10000'))
+      await this.RBA.transfer(user2.address, ethers.utils.parseEther('20000'))
+      await this.RBA.transfer(user3.address, ethers.utils.parseEther('30000'))
+      await this.RBA.transfer(user4.address, ethers.utils.parseEther('40000'))
+      await this.RBA.transfer(user5.address, ethers.utils.parseEther('60000'))
+
 
        const user1Amount = utils.parseEther('50000')
 
+
         //Transfer 
         await this.RBA.transfer(user1.address, user1Amount)
-        expect(await this.RBA.balanceOf(user1.address)).to.be.equal(user1Amount)
+        //expect(await this.RBA.balanceOf(user1.address)).to.be.equal(user1Amount)
       
         //connect user 1 and approve token spending
         await this.RBA.connect(user1).approve(process.env.ROUTER02, user1Amount )
@@ -352,7 +360,7 @@
       const user2Amount = utils.parseEther('50000')
 
       await this.RBA.transfer(user2.address, user2Amount)
-      expect(await this.RBA.balanceOf(user2.address)).to.be.equal(user2Amount)
+      //expect(await this.RBA.balanceOf(user2.address)).to.be.equal(user2Amount)
       await this.RBA.connect(user2).approve(process.env.ROUTER02, user2Amount)
 
       //swap
@@ -429,28 +437,10 @@
       console.log('\t\tBuy Back RBA Actual:',_buyBackWalletBal - buyBackWalletBal)
       console.log('           ')
 
-     
-      console.log(`Total dividend collected:${await this.USDC.balanceOf(this.RBAT.address)/10**18}`)
+      const dividend = await this.USDC.balanceOf(this.RBAT.address)
+      console.log(`Total dividend collected:${dividend/10**18}`)
+      //await this.RBAT.distributeDividends(dividend)
 
-    //   const baluser1 =await this.RBA.dividendTokenBalanceOf(user1.address)/10**18
-    //   const baluser2 =await this.RBA.dividendTokenBalanceOf(user2.address)/10**18
-    //   const baluser3 =await this.RBA.dividendTokenBalanceOf(user3.address)/10**18
-
-    //   const div1=await this.USDC.balanceOf(user1.address)/10**18
-    //   const div2=await this.USDC.balanceOf(user2.address)/10**18
-    //   const div3=await this.USDC.balanceOf(user3.address)/10**18 
-      
-    //   //Calculate expected total dividend
-    //   const swapWETH = await ammF(1000000,1000,1666)//1. this.RBAT-WETH pool
-    //   console.log(`           Expected Total Dividend ${ await ammF(1000,1000000, swapWETH)}`) //USDC-WETH pool
-    //   console.log(`           Actual   Total Dividend:${div1+div2+div3}\n `)
-      
-    //   console.log(`           Address 4: Bal:${baluser1} Dividend: ${div1}`)
-    //   console.log(`           Address 5: Bal:${baluser2} Dividend: ${div2}`)
-    //   console.log(`           Address 6: Bal:${baluser3} Dividend: ${div3}`)
-      
-    //   console.log(`\n           withdrawableDividendOf\n
-    //                             Address 4: ${await this.RBA.withdrawableDividendOf(user1.address)}`)
     })
 
      }); 
@@ -516,7 +506,7 @@
       
     })
 
-    describe.only("Bridge", function(){
+    describe("Bridge", function(){
       it('setBridge', async function(){
         await expect(this.RBA.setBridge(bridge.address)).to.emit(
           this.RBA, "LogSetBridge").withArgs(owner.address, bridge.address)
@@ -571,22 +561,29 @@
         //Revert 2: "Lock amount must be greater than zero"
         await expect(this.RBA.connect(bridge).unlock(
             user5.address, ethers.utils.parseEther('000'))).revertedWith(
-              "Lock amount must be greater than zero")
+              "Unlock amount must be greater than zero")
 
         //Revert 3:  "Insufficient funds"
         await expect(this.RBA.connect(bridge).unlock(
-          user5.address, ethers.utils.parseEther('1000'))).revertedWith(
+          user5.address, ethers.utils.parseEther('10000'))).revertedWith(
             "Insufficient funds")
 
-        
+        //Check bridge bal before withdraw
       expect(await this.RBA.balanceOf(bridgeVault.address)).to.be.equal(
         ethers.utils.parseEther('1000'))
       
+      //await this.RBA.connect(bridgeVault).approve(bridge.address, ethers.utils.parseEther('500') )
+        //success !
+        await expect(this.RBA.connect(bridge).unlock(
+          user5.address, ethers.utils.parseEther('500'))).to.emit(
+            this.RBA, 'LogUnlockByBridge').withArgs(user5.address,ethers.utils.parseEther('500') )
 
-        
-        // await expect(this.RBA.connect(bridge).unlock(
-        //   user5.address, ethers.utils.parseEther('500'))).to.emit(
-        //     this.RBA, 'LogUnlockByBridge').withArgs(user5.address,ethers.utils.parseEther('500') )
+        expect(await this.RBA.balanceOf(bridgeVault.address)).to.be.equal(
+          ethers.utils.parseEther('500'))
+          expect(await this.RBA.balanceOf(bridgeVault.address)).to.be.equal(
+            ethers.utils.parseEther('500'))
+        expect(await this.RBA.balanceOf(user5.address)).to.be.equal(
+            ethers.utils.parseEther('500'))
 
       })
       
@@ -652,7 +649,7 @@
           await expect(this.RBA.updateSwapTokensAtAmount(utils.parseEther('100000000'))).to.be.revertedWith("BattlefieldOfRenegades: Max should be at 10%")
 
         })
-        it('Should update Minmum Token Balance', async function(){
+        it.only('Should update Minmum Token Balance', async function(){
             await  this.RBA.updateMinTokenBalance(100000)
             expect(await this.RBAT.minimumTokenBalanceForDividends()).to.be.equal(utils.parseEther('100000'))
         })
