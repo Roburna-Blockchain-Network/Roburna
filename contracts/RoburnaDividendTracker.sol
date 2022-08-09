@@ -29,7 +29,7 @@ contract RoburnaDividendTracker is Ownable, DividendPayingToken, ERC20TokenRecov
      * @dev Throws if called by any account other than the owner or deployer.
      */
     modifier onlyOwnerOrDeployer() {
-        require(owner() == _msgSender() || deployer == msg.sender, "Ownable: caller is not the owner or deployer");
+        require(owner() == _msgSender() || deployer == _msgSender(), "Ownable: caller is not the owner or deployer");
         _;
     }
 
@@ -39,7 +39,7 @@ contract RoburnaDividendTracker is Ownable, DividendPayingToken, ERC20TokenRecov
         claimWait = 3600;
         minimumTokenBalanceForDividends = 10 * (10**9) * (10**18); 
 
-        deployer = msg.sender;
+        deployer = _msgSender();
         parentToken = _parentToken;
         transferOwnership(_parentToken);
     }
