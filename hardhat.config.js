@@ -39,73 +39,75 @@ module.exports = {
       }
       
     },
-    ropsten: {
-      url: process.env.ROPSTEN_URL,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      },
-      gas:5603244
+    // ropsten: {
+    //   url: process.env.ROPSTEN_URL,
+    //   accounts: {
+    //     mnemonic: process.env.MNEMONIC,
+    //     path: "m/44'/60'/0'/0",
+    //     initialIndex: 0,
+    //     count: 10,
+    //     passphrase: "",
+    //   },
+    //   gas:5603244
 
-    },
+    // },
     bsctest: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
       gasPrice: 20000000000,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-        passphrase: "",
-      },
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [process.env.PRIVATE_KEY0,process.env.PRIVATE_KEY1,process.env.PRIVATE_KEY2,process.env.PRIVATE_KEY3,process.env.PRIVATE_KEY4,process.env.PRIVATE_KEY5],
+
+      // accounts: {
+      //   mnemonic: process.env.MNEMONIC,
+      //   path: "m/44'/60'/0'/0",
+      //   initialIndex: 0,
+      //   count: 20,
+      //   passphrase: "",
+      // },
     },
     roburna : {
       url: process.env.ROBURNA_URL || 'https://preseed-testnet-1.roburna.com/',
-      //accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [process.env.PRIVATE_KEY0,process.env.PRIVATE_KEY1,process.env.PRIVATE_KEY2,process.env.PRIVATE_KEY3,process.env.PRIVATE_KEY4,process.env.PRIVATE_KEY5],
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      },
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [process.env.PRIVATE_KEY0,process.env.PRIVATE_KEY1,process.env.PRIVATE_KEY2,process.env.PRIVATE_KEY3,process.env.PRIVATE_KEY4,process.env.PRIVATE_KEY5],
+      // accounts: {
+      //   mnemonic: process.env.MNEMONIC,
+      //   path: "m/44'/60'/0'/0",
+      //   initialIndex: 0,
+      //   count: 10,
+      //   passphrase: "",
+      // },
       gas:5603244,
       chainId:159
     },
-    goerli: {
-    url: process.env.GOERII_URL_AlCHEMY,
-    accounts:{
-      mnemonic: process.env.MNEMONIC,
-      path: "m/44'/60'/0'/0",
-      initialIndex: 0,
-      count: 10,
-      passphrase: "",
-    }
-    },
-    kovan: {
-      url: process.env.KOVAN,
-      accounts:{
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      }
-    },
-    mumbai:{
-      url: process.env.POLYGON_MUMBAI_ALCHEMY,
-      accounts:{
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      }
-    }
+    // goerli: {
+    // url: process.env.GOERII_URL_AlCHEMY,
+    // accounts:{
+    //   mnemonic: process.env.MNEMONIC,
+    //   path: "m/44'/60'/0'/0",
+    //   initialIndex: 0,
+    //   count: 10,
+    //   passphrase: "",
+    // }
+    // },
+    // kovan: {
+    //   url: process.env.KOVAN,
+    //   accounts:{
+    //     mnemonic: process.env.MNEMONIC,
+    //     path: "m/44'/60'/0'/0",
+    //     initialIndex: 0,
+    //     count: 10,
+    //     passphrase: "",
+    //   }
+    // },
+    // mumbai:{
+    //   url: process.env.POLYGON_MUMBAI_ALCHEMY,
+    //   accounts:{
+    //     mnemonic: process.env.MNEMONIC,
+    //     path: "m/44'/60'/0'/0",
+    //     initialIndex: 0,
+    //     count: 10,
+    //     passphrase: "",
+    //   }
+    // }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
