@@ -23,7 +23,13 @@
       await this.USDC.deployed()
        
       //deploy this.RBA
-      this.RBA = await this.Roburna.deploy(process.env.ROUTER02,this.USDC.address ,marketingWallet.address, buyBackWallet.address, blackListWallet.address, bridgeVault.address);
+      this.RBA = await this.Roburna.deploy(
+        process.env.ROUTER02,
+        this.USDC.address ,
+        marketingWallet.address, 
+        buyBackWallet.address, 
+        blackListWallet.address, 
+        bridgeVault.address);
       await this.RBA.deployed()
      
       //deploy this.RBAT

@@ -28,13 +28,14 @@ module.exports = {
   networks: {
     hardhat:{
       forking: {
-        url: process.env.GOERII_URL_AlCHEMY,
+        //url: process.env.GOERII_URL_AlCHEMY,
+        url: "https://bsc-dataseed1.binance.org/",
         allowUnlimitedContractSize: true,
-        timeout:90000,
-        //blockNumber:12325509
-        blockNumber:7022764,
-        chainId:5,
-        gas:9000000000000000
+        // timeout:90000,
+        // //blockNumber:12325509
+        // blockNumber:7022764,
+        chainId:57,
+        // gas:9000000000000000
       }
       
     },
