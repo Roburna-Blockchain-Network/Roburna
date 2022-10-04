@@ -79,7 +79,8 @@ abstract contract DividendPayingToken is
 
     function accumulativeDividendOf(address _owner) public view override returns (uint256) {
         return
-            uint256(int256((magnifiedDividendPerShare * balanceOf(_owner))) + magnifiedDividendCorrections[_owner]) /
+            uint256(int256((magnifiedDividendPerShare * balanceOf(_owner))) + 
+            magnifiedDividendCorrections[_owner]) /
             magnitude;
     }
 

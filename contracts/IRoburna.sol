@@ -38,7 +38,6 @@ interface IRoburna is IBEP20, IERC1363, IERC2612, IERC20Burnable, IERC20TokenRec
     // Supply and amounts
     function swapTokensAtAmount() external view returns (uint256);
 
-    function maxWalletToken() external view returns (uint256);
 
     // fees (from a total of 10000)
     function buyFeesCollected() external view returns (uint256);

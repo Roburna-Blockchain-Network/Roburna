@@ -25,6 +25,9 @@ contract RoburnaDividendTracker is Ownable, DividendPayingToken, ERC20TokenRecov
     uint256 public override claimWait;
     uint256 public override minimumTokenBalanceForDividends;
 
+    event LogUpdateDeployerAddress(address newDeployer);
+    event LogUpdateMinTokenBalance(uint256 newMinTokens);
+
     /**
      * @dev Throws if called by any account other than the owner or deployer.
      */
@@ -37,7 +40,7 @@ contract RoburnaDividendTracker is Ownable, DividendPayingToken, ERC20TokenRecov
         DividendPayingToken("Roburna Dividend Tracker", "RBADT", dividendToken)
     {
         claimWait = 3600;
-        minimumTokenBalanceForDividends = 10 * (10**9) * (10**18); 
+        minimumTokenBalanceForDividends = 10 * (10**3) * (10**18); 
 
         deployer = _msgSender();
         parentToken = _parentToken;
@@ -47,6 +50,12 @@ contract RoburnaDividendTracker is Ownable, DividendPayingToken, ERC20TokenRecov
     //== BEP20 owner function ==
     function getOwner() public view override returns (address) {
         return owner();
+    }
+
+    function updateDeployerAddress(address newDeployer) external onlyOwnerOrDeployer{
+        require(deployer != newDeployer, "The address is already set");
+        deployer = newDeployer;
+        emit LogUpdateDeployerAddress(newDeployer);
     }
 
     function recoverERC20(address tokenAddress, uint256 tokenAmount)
@@ -104,6 +113,7 @@ contract RoburnaDividendTracker is Ownable, DividendPayingToken, ERC20TokenRecov
 
     function updateMinTokenBalance(uint256 minTokens) external override onlyOwnerOrDeployer {
         minimumTokenBalanceForDividends = minTokens * (10**18);
+        emit LogUpdateMinTokenBalance(minTokens);
     }
 
     function getLastProcessedIndex() external view override returns (uint256) {

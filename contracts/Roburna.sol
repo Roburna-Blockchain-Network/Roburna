@@ -16,36 +16,10 @@ import "./IRoburnaDividendTracker.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 
-/**
- *  Earn USDC while holding Roburna tokens!
- *
- *  Tokenomics:
- *  1 billion tokens
- *
- *  Buy fee 20%:
- *  4 % USDC reflection
- *  3 % liquidity fee
- *  5 % marketing fee
- *  8 % BuyBack fee
- *
- *  Sell fee 20%:
- *  4 % USDC reflection
- *  3 % liquidity fee
- *  5 % marketing fee
- *  8 % BuyBack fee
- *
- *  Extra Roburna tokens send to the contract are seen as dividend
- *
- *  Max wallet size of 1%
- *
- *  https://roburna.com
- */
-
 contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, IRoburna {
     using SafeMath for uint256;
     mapping(address => bool) public override dexRouters;
     // store addresses that are automatic market maker (dex) pairs. Any transfer *to* these addresses
-    // could be subject to a maximum transfer amount
     mapping(address => bool) public override automatedMarketMakerPairs;
 
     IDEXRouter public override defaultDexRouter;
@@ -69,19 +43,19 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     // 1 billion (this will also be the total supply as there is not public mint function)
     uint256 private _startSupply = 1 * (10**9) * (10**18);
     uint256 public override swapTokensAtAmount = 20000 * (10**18);
-    uint256 public override maxWalletToken = 10000000 * (10**18); // 1% of total supply
+    
 
     // fees (from a total of 10000)
     uint256 public override buyFeesCollected = 0;
-    uint256 public override buyBuyBackFee = 400;
-    uint256 public override buyDividendFee = 300;
+    uint256 public override buyBuyBackFee = 800;
+    uint256 public override buyDividendFee = 400;
     uint256 public override buyLiquidityFee = 200;
     uint256 public override buyMarketingFee = 500;
     uint256 public override buyTotalFees = buyDividendFee + buyLiquidityFee + buyMarketingFee + buyBuyBackFee;
 
     uint256 public override sellFeesCollected = 0;
-    uint256 public override sellBuyBackFee = 400;
-    uint256 public override sellDividendFee = 300;
+    uint256 public override sellBuyBackFee = 800;
+    uint256 public override sellDividendFee = 400;
     uint256 public override sellLiquidityFee = 200;
     uint256 public override sellMarketingFee = 500;
     uint256 public override sellTotalFees = sellDividendFee + sellLiquidityFee + sellMarketingFee + sellBuyBackFee;
@@ -93,11 +67,10 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     // these addresses can also make transfers before presale is over
     mapping(address => bool) public override whitelistedAddresses;
 
-    // exlcude from fees and max transaction amount
+    // exlcude from fees 
     mapping(address => bool) private _isExcludedFromFees;
     mapping(address => bool) private _isBlackListed;
     mapping(address => uint256) private _blackListedAmount;
-    mapping(address => uint256) private _lockedAmount;
 
     event LogAddressBlackListed(address account);
     event LogAddressRemovedFromBL(address account);
@@ -107,6 +80,10 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     event LogSetBuyBackWallet(address account);
     event LogSetBridgeVault(address account);
     event LogSetBlackListWallet(address _blackListWallet);
+    event LogUpdateNameAndSymbol(string name, string symbol);
+    event LogSetTransfersEnabled(bool enabled);
+    event LogUpdateSwapTokensAtAmount(uint256 tokens);
+
 
     bool private nameChanged = false;
 
@@ -120,14 +97,13 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     ) ERC2612("Roburna", "RBA") {
         IDEXRouter _dexRouter = IDEXRouter(_routerAddress);
         USDC = _usdc;
+        
         marketingWallet = _marketingWallet;
         liquidityWallet = owner();
         buyBackWallet = _buyBackWallet;
         blackListWallet = _blackListWallet;
-        // exclude bridge Vault from receiving rewards
         bridgeVault = _bridgeVault;
        
-
         defaultDexRouter = _dexRouter;
         dexRouters[_routerAddress] = true;
         defaultPair = IDEXFactory(_dexRouter.factory()).createPair(address(this), _dexRouter.WETH());
@@ -193,6 +169,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         _name = name_;
         _symbol = symbol_;
         nameChanged = true;
+        emit LogUpdateNameAndSymbol(_name, _symbol);
     }
 
     /**
@@ -207,12 +184,11 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         override(ERC20TokenRecover, IERC20TokenRecover)
         onlyOwner
     {
-        require(tokenAddress != address(this), "Cannot retrieve Roburnas");
+        require(tokenAddress != address(this), "Cannot retrieve Roburna");
         super.recoverERC20(tokenAddress, tokenAmount);
     }
 
     function setWhitelistAddress(address _whitelistAddress, bool whitelisted) public override onlyOwner {
-        require(_whitelistAddress != bridgeVault, "Bridge Vault can't receive reward");
         whitelistedAddresses[_whitelistAddress] = whitelisted;
         excludeFromFees(_whitelistAddress, whitelisted);
         if (whitelisted) {
@@ -390,6 +366,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
      */
     function setTransfersEnabled(bool enabled) external override onlyOwner {
         transfersEnabled = enabled;
+        emit LogSetTransfersEnabled(enabled);
     }
 
     function updateBuyFees(
@@ -422,8 +399,9 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
 
     function updateSwapTokensAtAmount(uint256 _swapTokensAtAmount) external override onlyOwner {
         require(_swapTokensAtAmount > 0, "Roburna: Amount should be higher then 0");
-        require(_swapTokensAtAmount <= 20000 * (10**18), "Roburna: Max should be at 10%");
+        require(_swapTokensAtAmount <= 100000000 * (10**18), "Roburna: Max should be at 10%");
         swapTokensAtAmount = _swapTokensAtAmount;
+        emit LogUpdateSwapTokensAtAmount(swapTokensAtAmount);
     }
 
     function _transfer(
@@ -435,22 +413,6 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         require(to != address(0), "ERC20: transfer to the zero address");
         require(_isBlackListed[from] != true, "Address blacklisted");
         require(_isBlackListed[to] != true, "Address blacklisted");
-
-        // when NOT from or to owner, to burn address or to dex pair
-        // check if target wallet exeeds the maxWalletPAirs
-        if (
-            from != owner() &&
-            to != owner() &&
-            to != address(0) &&
-            to != 0x000000000000000000000000000000000000dEaD &&
-            !automatedMarketMakerPairs[to]
-        ) {
-            uint256 contractBalanceRecepient = balanceOf(to);
-            require(
-                contractBalanceRecepient + amount <= maxWalletToken,
-                "Roburna: Exceeds maximum wallet token amount."
-            );
-        }
 
         // only whitelisted addresses can make transfers when transfers are disabled
         if (!transfersEnabled) {
@@ -563,16 +525,16 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         uint256 half = tokens / 2;
         uint256 otherHalf = tokens - half;
 
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
+        // capture the contract's current BNB balance.
+        // this is so that we can capture exactly the amount of BNB that the
+        // swap creates, and not make the liquidity event include any BNB that
         // has been manually sent to the contract
         uint256 initialBalance = address(this).balance;
 
-        // swap tokens for ETH
-        swapTokensForEth(half); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
+        // swap tokens for BNB
+        swapTokensForEth(half); // <- this breaks the BNB -> RBA swap when swap+liquify is triggered
 
-        // how much ETH did we just swap into?
+        // how much BNB did we just swap into?
         uint256 newBalance = address(this).balance - initialBalance;
 
         // add liquidity to uniswap
@@ -582,7 +544,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     }
 
     function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
+        // generate the uniswap pair path of token -> wBNB
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = defaultDexRouter.WETH();
@@ -592,7 +554,7 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         // make the swap
         defaultDexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
-            0, // accept any amount of ETH
+            0, // accept any amount of BNB
             path,
             address(this),
             block.timestamp
@@ -621,14 +583,14 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         
 
         if (success){
-            //dividendTracker.distributeDividends(dividends);
-            // emit SendDividends(tokens, dividends);
+            dividendTracker.distributeDividends(dividends);
+            emit SendDividends(tokens, dividends);
         }
            
     }
 
     function swapTokensForUSDC(uint256 tokenAmount, address recipient) private {
-        // generate the uniswap pair path of weth -> USDC
+        // generate the uniswap pair path of wBNB -> USDC
         address[] memory path = new address[](3);
         path[0] = address(this);
         path[1] = defaultDexRouter.WETH();
@@ -678,34 +640,26 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
         emit LogSetBridge(msg.sender, bridge);
     }
 
-    /**
-     * @dev need approval from account
-     */
     function lock(address account, uint256 amount) external onlyBridge {
         require(account != address(0), "Zero address");
         require(amount > 0, "Lock amount must be greater than zero");
         require(amount <= balanceOf(account), "Insufficient funds");
-        require(allowance(account,_msgSender()) >= amount, "ERC20: transfer amount exceeds allowance");
-        _lockedAmount[account] = amount;
+        
         super._transfer(account, bridgeVault, amount);
-
-
 
         emit LogLockByBridge(account, amount);
     }
 
     /**
-     * @dev no need approval, because bridgeVault balance is controlled by EMPIRE
+     * @dev no need approval, because bridgeVault balance is controlled by ROBURNA
      */
     function unlock(address account, uint256 amount) external onlyBridge {
         require(account != address(0), "Zero address");
         require(amount > 0, "Unlock amount must be greater than zero");
-        //require(amount <= balanceOf(account), "Insufficient funds");
-        require(amount <= _lockedAmount[account], "Insufficient funds");
-
+        require(amount <= balanceOf(bridgeVault), "Insufficient funds");
 
         super._transfer(bridgeVault, account, amount);
-
+        
         emit LogUnlockByBridge(account, amount);
     }
 }

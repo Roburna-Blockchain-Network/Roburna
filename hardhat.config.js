@@ -34,86 +34,57 @@ module.exports = {
         // timeout:90000,
         // //blockNumber:12325509
         // blockNumber:7022764,
-        chainId:57,
+        chainId:56,
         // gas:9000000000000000
       }
       
     },
-    ropsten: {
-      url: process.env.ROPSTEN_URL,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      },
-      gas:5603244
-
-    },
-    bsctest: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
-      chainId: 97,
-      gasPrice: 20000000000,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-        passphrase: "",
-      },
-    },
-    roburna : {
-      url: process.env.ROBURNA_URL || 'https://preseed-testnet-1.roburna.com/',
-      //accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [process.env.PRIVATE_KEY0,process.env.PRIVATE_KEY1,process.env.PRIVATE_KEY2,process.env.PRIVATE_KEY3,process.env.PRIVATE_KEY4,process.env.PRIVATE_KEY5],
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      },
-      gas:5603244,
-      chainId:159
-    },
-    goerli: {
-    url: process.env.GOERII_URL_AlCHEMY,
-    accounts:{
-      mnemonic: process.env.MNEMONIC,
-      path: "m/44'/60'/0'/0",
-      initialIndex: 0,
-      count: 10,
-      passphrase: "",
-    }
-    },
-    kovan: {
-      url: process.env.KOVAN,
-      accounts:{
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      }
-    },
-    mumbai:{
-      url: process.env.POLYGON_MUMBAI_ALCHEMY,
-      accounts:{
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 10,
-        passphrase: "",
-      }
-    }
+     binanceTest: {
+       url: "https://bsc-dataseed3.ninicoin.io/",
+       accounts:['1ca414de8efab902e9fe43e5e0660a0e58d21fa3891fe9132b32f2c85367f2ad'],
+       allowUnlimitedContractSize: true,
+       
+     },
+    
+    
+    // goerli: {
+    // url: process.env.GOERII_URL_AlCHEMY,
+    // accounts:{
+    //   mnemonic: process.env.MNEMONIC,
+    //   path: "m/44'/60'/0'/0",
+    //   initialIndex: 0,
+    //   count: 10,
+    //   passphrase: "",
+    // }
+    // },
+    // kovan: {
+    //   url: process.env.KOVAN,
+    //   accounts:{
+    //     mnemonic: process.env.MNEMONIC,
+    //     path: "m/44'/60'/0'/0",
+    //     initialIndex: 0,
+    //     count: 10,
+    //     passphrase: "",
+    //   }
+    // },
+    // mumbai:{
+    //   url: process.env.POLYGON_MUMBAI_ALCHEMY,
+    //   accounts:{
+    //     mnemonic: process.env.MNEMONIC,
+    //     path: "m/44'/60'/0'/0",
+    //     initialIndex: 0,
+    //     count: 10,
+    //     passphrase: "",
+    //   }
+    // }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.POLYGON_MUMBAI_API_KEY,
-    //apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: "MMTH9PCYDD18ZYA6TKHA51TUKEJ536C33P",
+    
   },
   
     solidity: {

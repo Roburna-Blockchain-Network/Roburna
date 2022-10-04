@@ -6,16 +6,19 @@ async function main() {
   this.Dividend = await ethers.getContractFactory("RoburnaDividendTracker")
 
   
-  const marketingWallet = "0x37EF590E0BDe413B6407Bc5c4e40C3706dEEBc86"
-  const usdt = "0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684"
-  const router = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3"
+  const marketingWallet = "0x26C3F83cB057ba3303A5dD508021952ad372E963"
+  const blackListWallet = "0xC6d96E8792db0e8aF14C112cA3239d9FAD70aa98"
+  const bridgeVault = "0x4648E40DC12D9cdB54BeFA45b34FC0E62C5bA41C"
+  const buyBackWallet = '0xaF9fa2aCbE7470A36528fA24CA3699aD178a6ab3'
+  const usdc = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
+  const router = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
   
-  this.token = await this.Token.deploy(router, usdt, marketingWallet)
+  this.token = await this.Token.deploy(router, usdc, marketingWallet, buyBackWallet, blackListWallet, bridgeVault)
 
   await this.token.deployed()
     
   
-  this.dividendTracker = await this.Dividend.deploy(usdt , this.token.address)
+  this.dividendTracker = await this.Dividend.deploy(usdc , this.token.address)
   await this.dividendTracker.deployed()
 
 
