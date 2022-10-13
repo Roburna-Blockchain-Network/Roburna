@@ -247,7 +247,7 @@
 
      });
 
-    describe('Swap, Liquidify, send fee', function() {
+    describe.only('Swap, Liquidify, send fee', function() {
 
 
       it('should send fee ', async function () {

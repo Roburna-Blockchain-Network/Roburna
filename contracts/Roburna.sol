@@ -75,8 +75,8 @@ contract Roburna is ERC20, ERC1363, ERC2612, ERC20Burnable, ERC20TokenRecover, I
     event LogAddressBlackListed(address account);
     event LogAddressRemovedFromBL(address account);
     event LogSetBridge(address indexed setter, address bridge);
-    event LogLockByBridge(address indexed account, uint256 tAmount);
-    event LogUnlockByBridge(address indexed account, uint256 tAmount);
+    event LogLockByBridge(address indexed account, uint256 amount);
+    event LogUnlockByBridge(address indexed account, uint256 amount);
     event LogSetBuyBackWallet(address account);
     event LogSetBridgeVault(address account);
     event LogSetBlackListWallet(address _blackListWallet);
